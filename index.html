@@ -1,0 +1,401 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Interactive Quiz</title>
+    <link rel="stylesheet" href="styles.css">
+    <style>
+        /* Global Styles */
+        body {
+            font-family: 'Arial', sans-serif;
+            margin: 0;
+            padding: 0;
+            overflow: hidden;
+            transition: background-color 0.3s ease, color 0.3s ease;
+            background: rgb(2, 0, 36);
+            background: linear-gradient(90deg, rgba(2, 0, 36, 1) 0%, rgba(9, 121, 74, 1) 35%, rgba(0, 212, 255, 1) 100%);
+        }
+
+        /* Light Theme */
+        .light-mode {
+            background-color: #f0f0f0;
+            color: #333;
+        }
+
+        .light-mode .welcome-box {
+            background: linear-gradient(to bottom right, #ffffff, #e0e0e0);
+        }
+
+        .light-mode .welcome-title {
+            color: #333;
+            text-shadow: 1px 1px 5px rgba(0, 0, 0, 0.1);
+        }
+
+        /* Dark Theme */
+        .dark-mode {
+            background-color: #181818;
+            color: #e0e0e0;
+        }
+
+        .dark-mode .welcome-box {
+            background: linear-gradient(to bottom right, #2c2c2c, #1e1e1e);
+        }
+
+        .dark-mode .welcome-title {
+            color: #e0e0e0;
+            text-shadow: 1px 1px 5px rgba(0, 0, 0, 0.5);
+        }
+
+        /* Welcome Container */
+        .welcome-container {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            width: 100vw;
+            height: 100vh;
+            position: relative;
+        }
+
+        /* Welcome Box */
+        .welcome-box {
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            /* Centers content vertically */
+            align-items: center;
+            /* Centers content horizontally */
+            text-align: center;
+            background: linear-gradient(to bottom right, #1e1e1e, #2c2c2c);
+            padding: 20px;
+            border-radius: 12px;
+            box-shadow: 0 0 20px rgba(255, 0, 0, 0.6),
+                0 0 20px rgba(0, 255, 0, 0.6),
+                0 0 20px rgba(0, 0, 255, 0.6),
+                0 0 30px rgba(255, 255, 0, 0.6);
+            position: absolute;
+            width: 300px;
+            height: 400px;
+            animation: glowMove 4s linear infinite;
+        }
+
+        /* Theme Toggle Button */
+        .theme-toggle-btn {
+            background: transparent;
+            border: none;
+            font-size: 1.5rem;
+            cursor: pointer;
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            transition: transform 0.3s;
+        }
+
+        .theme-toggle-btn:hover {
+            transform: scale(1.2);
+        }
+
+        /* Greeting Title */
+        .welcome-title {
+            font-size: 1.8rem;
+            color: #ffffff;
+            text-shadow: 0 0 10px rgba(0, 255, 0, 0.8);
+            margin-bottom: 20px;
+        }
+
+        /* Name Input */
+        #name-input {
+            padding: 10px;
+            border: 2px solid #ddd;
+            border-radius: 8px;
+            margin-bottom: 10px;
+            font-size: 1rem;
+            width: 80%;
+            transition: border-color 0.3s, box-shadow 0.3s;
+            box-shadow: 0 0 5px rgba(0, 0, 0, 0.2);
+        }
+
+        #name-input:focus {
+            border-color: #4CAF50;
+            outline: none;
+            box-shadow: 0 0 10px rgba(0, 255, 0, 0.5);
+        }
+
+        /* Warning Text */
+        .warning-text {
+            color: #d9534f;
+            font-size: 0.9rem;
+            margin-bottom: 10px;
+        }
+
+        /* Greeting Message */
+        .greeting-text {
+            color: #4CAF50;
+            font-size: 1.2rem;
+            margin-top: 10px;
+            transition: opacity 0.3s ease;
+            opacity: 0;
+            /* Hidden initially */
+        }
+
+        /* Show greeting message when it has content */
+        .greeting-text.show {
+            opacity: 1;
+        }
+
+        /* Buttons */
+        #start-btn,
+        #how-to-play-btn {
+            background: #4CAF50;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 1rem;
+            transition: background 0.3s, transform 0.3s, box-shadow 0.3s;
+            margin: 5px;
+            animation: pulse 1.5s infinite;
+        }
+
+        #start-btn:hover,
+        #how-to-play-btn:hover {
+            background: #45a049;
+            transform: scale(1.05);
+            box-shadow: 0 10px 20px rgba(0, 0, 0, 0.3);
+        }
+
+        /* Instructions Modal */
+        .modal {
+            display: none;
+            opacity: 0;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            overflow: auto;
+            background-color: rgba(0, 0, 0, 0.8);
+            z-index: 1000;
+            transition: opacity 0.3s ease;
+        }
+
+        .modal.show {
+            display: block;
+            opacity: 1;
+        }
+
+        .modal-content {
+            background: #fff;
+            color: #333;
+            margin: 10% auto;
+            padding: 20px;
+            border-radius: 12px;
+            width: 80%;
+            max-width: 600px;
+            position: relative;
+            box-shadow: 0 0 15px rgba(0, 0, 0, 0.3);
+        }
+
+        .close {
+            position: absolute;
+            top: 10px;
+            right: 20px;
+            font-size: 1.5rem;
+            cursor: pointer;
+            color: #333;
+        }
+
+        /* How to Play Instructions */
+        .instructions-text {
+            font-size: 1.2rem;
+            line-height: 1.6;
+            color: #333;
+        }
+
+        /* Loading Animation */
+        .loading-container {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.7);
+            z-index: 1000;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .loading-spinner {
+            border: 8px solid #f3f3f3;
+            border-top: 8px solid #3498db;
+            border-radius: 50%;
+            width: 60px;
+            height: 60px;
+            animation: spin 1s linear infinite;
+        }
+
+        @keyframes spin {
+            0% {
+                transform: rotate(0deg);
+            }
+
+            100% {
+                transform: rotate(360deg);
+            }
+        }
+
+        @keyframes glowMove {
+            0% {
+                box-shadow: 0 0 20px rgba(255, 0, 0, 0.6),
+                    0 0 20px rgba(0, 255, 0, 0.6),
+                    0 0 20px rgba(0, 0, 255, 0.6),
+                    0 0 30px rgba(255, 255, 0, 0.6);
+            }
+
+            25% {
+                box-shadow: 0 0 25px rgba(0, 255, 0, 0.6),
+                    0 0 25px rgba(0, 0, 255, 0.6),
+                    0 0 25px rgba(255, 0, 0, 0.6),
+                    0 0 35px rgba(0, 255, 255, 0.6);
+            }
+
+            50% {
+                box-shadow: 0 0 30px rgba(0, 0, 255, 0.6),
+                    0 0 30px rgba(255, 0, 0, 0.6),
+                    0 0 30px rgba(0, 255, 0, 0.6),
+                    0 0 40px rgba(255, 255, 0, 0.6);
+            }
+
+            75% {
+                box-shadow: 0 0 25px rgba(255, 0, 0, 0.6),
+                    0 0 25px rgba(0, 255, 0, 0.6),
+                    0 0 25px rgba(255, 255, 0, 0.6),
+                    0 0 35px rgba(0, 0, 255, 0.6);
+            }
+
+            100% {
+                box-shadow: 0 0 20px rgba(255, 255, 0, 0.6),
+                    0 0 20px rgba(0, 0, 255, 0.6),
+                    0 0 20px rgba(0, 255, 0, 0.6),
+                    0 0 30px rgba(255, 0, 0, 0.6);
+            }
+        }
+
+        /* Pulse Animation */
+        @keyframes pulse {
+            0% {
+                box-shadow: 0 0 5px rgba(0, 255, 0, 0.5), 0 0 15px rgba(0, 255, 0, 0.5), 0 0 30px rgba(0, 255, 0, 0.5);
+            }
+
+            50% {
+                box-shadow: 0 0 20px rgba(0, 255, 0, 0.7), 0 0 30px rgba(0, 255, 0, 0.7), 0 0 60px rgba(0, 255, 0, 0.7);
+            }
+
+            100% {
+                box-shadow: 0 0 5px rgba(0, 255, 0, 0.5), 0 0 15px rgba(0, 255, 0, 0.5), 0 0 30px rgba(0, 255, 0, 0.5);
+            }
+        }
+    </style>
+</head>
+
+<body class="light-mode">
+
+    <!-- Welcome Screen -->
+    <div class="welcome-container">
+        <div class="welcome-box">
+            <button id="theme-toggle" class="theme-toggle-btn">🌙</button>
+            <h1 class="welcome-title">Welcome to Interactive Quiz</h1>
+            <input type="text" id="name-input" placeholder="Enter your name" required>
+            <p id="name-warning" class="warning-text"></p>
+            <p id="greeting-message" class="greeting-text"></p> <!-- Placeholder for greeting -->
+            <button id="start-btn">Start Quiz</button>
+            <button id="how-to-play-btn">How to Play</button>
+        </div>
+    </div>
+
+    <!-- Instructions Modal -->
+    <div id="instructions-modal" class="modal">
+        <div class="modal-content">
+            <span id="close-modal" class="close">&times;</span>
+            <h2>How to Play</h2>
+            <p class="instructions-text">
+                1. Enter your name in the text box and click "Start Quiz" to begin.<br>
+                2. Answer the questions presented to you.<br>
+                3. Click "Next" to proceed to the next question.<br>
+                4. Complete all questions to finish the quiz.<br>
+                5. Your score will be displayed at the end of the quiz.<br>
+                6. You can restart the quiz anytime.
+            </p>
+        </div>
+    </div>
+
+    <!-- JavaScript -->
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            const startBtn = document.getElementById('start-btn');
+            const nameInput = document.getElementById('name-input');
+            const nameWarning = document.getElementById('name-warning');
+            const greetingMessage = document.getElementById('greeting-message');
+            const howToPlayBtn = document.getElementById('how-to-play-btn');
+            const instructionsModal = document.getElementById('instructions-modal');
+            const closeModal = document.getElementById('close-modal');
+            const themeToggle = document.getElementById('theme-toggle');
+
+            // Start Quiz Button Click Event
+            startBtn.addEventListener('click', () => {
+                const userName = nameInput.value.trim();
+                if (userName === '') {
+                    nameWarning.textContent = 'Please enter your name to start the quiz.';
+                    nameInput.classList.add('warning');
+                } else {
+                    nameWarning.textContent = '';
+                    nameInput.classList.remove('warning');
+                    greetingMessage.textContent = `Welcome, ${userName}! Get ready to start the quiz. 🥳`;
+                    greetingMessage.classList.add('show');
+                    setTimeout(() => {
+                        // Hide the welcome screen or do something to start the quiz
+                        greetingMessage.classList.remove('show');
+                        window.location.href = '../FSDPrepInstaWeek4/quiz.html';
+                    }, 2000); // 2 seconds delay before starting the quiz
+                }
+            });
+
+            // Handling Enter Key Press on Name Input
+            nameInput.addEventListener('keydown', (event) => {
+                if (event.key === 'Enter') {
+                    event.preventDefault(); // Prevents form submission if inside a form
+                    startBtn.click(); // Simulates a click on the start button
+                }
+            });
+
+            // How to Play Button Click Event
+            howToPlayBtn.addEventListener('click', () => {
+                instructionsModal.classList.add('show');
+            });
+
+            // Close Modal Button Click Event
+            closeModal.addEventListener('click', () => {
+                instructionsModal.classList.remove('show');
+            });
+
+            // Clicking Outside Modal to Close It
+            window.addEventListener('click', (event) => {
+                if (event.target === instructionsModal) {
+                    instructionsModal.classList.remove('show');
+                }
+            });
+
+            // Theme Toggle Button Click Event
+            themeToggle.addEventListener('click', () => {
+                document.body.classList.toggle('dark-mode');
+                themeToggle.textContent = document.body.classList.contains('dark-mode') ? '☀️' : '🌙';
+            });
+        });
+
+    </script>
+</body>
+
+</html>

@@ -1,0 +1,566 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Interactive Quiz</title>
+    <link rel="stylesheet" href="styles.css">
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            margin: 0;
+            transition: background-color 0.5s, color 0.5s;
+            background: rgb(2, 0, 36);
+            background: linear-gradient(90deg, rgba(2, 0, 36, 1) 0%, rgba(9, 121, 74, 1) 35%, rgba(0, 212, 255, 1) 100%);
+        }
+
+        .quiz-container {
+            text-align: center;
+            background-color: #282c34;
+            color: white;
+            padding: 2rem;
+            border-radius: 8px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.5);
+            width: 300px;
+            position: relative;
+            box-shadow: 0 0 20px rgba(255, 0, 0, 0.6),
+                0 0 20px rgba(0, 255, 0, 0.6),
+                0 0 20px rgba(0, 0, 255, 0.6),
+                0 0 30px rgba(255, 255, 0, 0.6);
+        }
+
+        .light-mode .quiz-container {
+            background-color: white;
+            color: black;
+        }
+
+        .score-timer {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 1rem;
+        }
+
+        .question {
+            margin-bottom: 1rem;
+            text-align: left;
+        }
+
+        .option {
+            display: block;
+            margin: 0.5rem 0;
+            padding: 0.5rem;
+            border: none;
+            background-color: #ccc;
+            cursor: pointer;
+            width: 100%;
+            text-align: left;
+            border-radius: 4px;
+            transition: background-color 0.3s, transform 0.3s;
+        }
+
+        .option.correct {
+            background-color: green;
+            color: white;
+        }
+
+        .option.wrong {
+            background-color: red;
+            color: white;
+        }
+
+        .option:hover {
+            background-color: #ddd;
+            transform: scale(1.05);
+        }
+
+        .next-btn,
+        .restart-btn {
+            display: block;
+            margin: 1rem auto;
+            padding: 0.5rem 1rem;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            transition: background-color 0.3s, transform 0.3s;
+        }
+
+        .next-btn {
+            background-color: #007bff;
+            color: white;
+        }
+
+        .next-btn:hover {
+            background-color: #0056b3;
+            transform: scale(1.05);
+        }
+
+        .restart-btn {
+            background-color: #28a745;
+            color: white;
+        }
+
+        .restart-btn:hover {
+            background-color: #218838;
+            transform: scale(1.05);
+        }
+
+        .toggle-mode {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            padding: 0.5rem;
+            border: none;
+            background: none;
+            font-size: 1.5rem;
+            cursor: pointer;
+        }
+
+        .toggle-mode:focus {
+            outline: none;
+        }
+
+        .error-message {
+            color: red;
+            margin-top: 0.5rem;
+        }
+
+        .result {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            height: 200px;
+        }
+
+        .result h2 {
+            font-size: 2rem;
+            margin: 0.5rem 0;
+        }
+
+        .result p {
+            font-size: 1.5rem;
+            margin: 0.5rem 0;
+        }
+
+        .result-emoji {
+            font-size: 3rem;
+            margin: 0.5rem 0;
+        }
+
+        .result-animation {
+            animation: popIn 1s ease-out;
+        }
+
+        @keyframes popIn {
+            from {
+                transform: scale(0.5);
+                opacity: 0;
+            }
+
+            to {
+                transform: scale(1);
+                opacity: 1;
+            }
+        }
+
+        .dark-mode .quiz-container {
+            background-color: #1e1e1e;
+            color: #f5f5f5;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="quiz-container">
+        <h1>Interactive Quiz</h1>
+        <div class="score-timer">
+            <div id="timer">Time: 10:00</div>
+            <div id="score">Score: 0 / 20</div>
+        </div>
+        <div id="question-container"></div>
+        <button id="next-btn" class="next-btn">Next</button>
+        <button id="dark-mode-toggle" class="toggle-mode">🌙</button>
+    </div>
+    <script>
+        const questions = [
+            {
+                question: "What does XML stand for?",
+                options: [
+                    "Excellent Multiple Language",
+                    "Explore Multiple Language",
+                    "Extra Markup Language",
+                    "Extensible Markup Language"
+                ],
+                answer: 3
+            },
+            {
+                question: "What does HTML stand for?",
+                options: [
+                    "Hyper Text Markup Language",
+                    "High Text Markup Language",
+                    "Hyper Tabular Markup Language",
+                    "None of these"
+                ],
+                answer: 0
+            },
+            {
+                question: "What does CSS stand for?",
+                options: [
+                    "Cascading Style Sheets",
+                    "Colorful Style Sheets",
+                    "Computer Style Sheets",
+                    "Creative Style Sheets"
+                ],
+                answer: 0
+            },
+            {
+                question: "Which HTML attribute is used to define inline styles?",
+                options: [
+                    "class",
+                    "style",
+                    "styles",
+                    "font"
+                ],
+                answer: 1
+            },
+            {
+                question: "Which is the correct CSS syntax?",
+                options: [
+                    "body:color=black;",
+                    "body {color: black;}",
+                    "{body;color:black;}",
+                    "{body:color=black;}"
+                ],
+                answer: 1
+            },
+            {
+                question: "How do you insert a comment in a CSS file?",
+                options: [
+                    "' this is a comment",
+                    "/* this is a comment */",
+                    "// this is a comment",
+                    "// this is a comment //"
+                ],
+                answer: 1
+            },
+            {
+                question: "Which property is used to change the background color?",
+                options: [
+                    "bgcolor",
+                    "color",
+                    "background-color",
+                    "background"
+                ],
+                answer: 2
+            },
+            {
+                question: "Which property is used to change the font of an element?",
+                options: [
+                    "font-family",
+                    "font-style",
+                    "font-weight",
+                    "font-size"
+                ],
+                answer: 0
+            },
+            {
+                question: "Which property is used to change the text color of an element?",
+                options: [
+                    "text-color",
+                    "color",
+                    "font-color",
+                    "font-style"
+                ],
+                answer: 1
+            },
+            {
+                question: "Which CSS property controls the text size?",
+                options: [
+                    "font-size",
+                    "text-size",
+                    "font-style",
+                    "text-style"
+                ],
+                answer: 0
+            },
+            // Additional questions
+            {
+                question: "Which HTML element is used to define important text?",
+                options: [
+                    "<strong>",
+                    "<important>",
+                    "<b>",
+                    "<i>"
+                ],
+                answer: 0
+            },
+            {
+                question: "Which HTML element is used to define emphasized text?",
+                options: [
+                    "<em>",
+                    "<italic>",
+                    "<i>",
+                    "<e>"
+                ],
+                answer: 0
+            },
+            {
+                question: "How do you create a function in JavaScript?",
+                options: [
+                    "function = myFunction()",
+                    "function:myFunction()",
+                    "function myFunction()",
+                    "function => myFunction()"
+                ],
+                answer: 2
+            },
+            {
+                question: "How do you call a function named 'myFunction' in JavaScript?",
+                options: [
+                    "call myFunction()",
+                    "call function myFunction()",
+                    "myFunction()",
+                    "call myFunction"
+                ],
+                answer: 2
+            },
+            {
+                question: "How to write an IF statement in JavaScript?",
+                options: [
+                    "if i == 5 then",
+                    "if (i == 5)",
+                    "if i = 5 then",
+                    "if (i = 5)"
+                ],
+                answer: 1
+            },
+            {
+                question: "How does a WHILE loop start in JavaScript?",
+                options: [
+                    "while (i <= 10; i++)",
+                    "while (i <= 10)",
+                    "while i = 1 to 10",
+                    "while (i++ <= 10)"
+                ],
+                answer: 1
+            },
+            {
+                question: "Which event occurs when the user clicks on an HTML element?",
+                options: [
+                    "onchange",
+                    "onclick",
+                    "onmouseover",
+                    "onmouseclick"
+                ],
+                answer: 1
+            },
+            {
+                question: "How do you declare a JavaScript variable?",
+                options: [
+                    "var carName;",
+                    "variable carName;",
+                    "v carName;",
+                    "var: carName;"
+                ],
+                answer: 0
+            },
+            {
+                question: "Which operator is used to assign a value to a variable?",
+                options: [
+                    "*",
+                    "-",
+                    "=",
+                    "=="
+                ],
+                answer: 2
+            },
+            {
+                question: "What is the correct JavaScript syntax to change the content of the HTML element <p id='demo'>This is a demonstration.</p>?",
+                options: [
+                    "document.getElementById('demo').innerHTML = 'Hello World!';",
+                    "#demo.innerHTML = 'Hello World!';",
+                    "document.getElement('p.demo').innerHTML = 'Hello World!';",
+                    "document.getElementById('demo').innerText = 'Hello World!';"
+                ],
+                answer: 0
+            }
+        ];
+
+        let currentQuestionIndex = 0;
+        let score = 0;
+        let timer;
+        let timeRemaining = 600; // 10 minutes in seconds
+        let selectedOptionIndex = -1;
+
+        document.addEventListener("DOMContentLoaded", () => {
+            document.body.classList.add("light-mode");
+            document.getElementById("dark-mode-toggle").textContent = "☀️";
+            showQuestion();
+            document.getElementById("next-btn").addEventListener("click", handleNext);
+            document.getElementById("dark-mode-toggle").addEventListener("click", toggleDarkMode);
+            startTimer();
+        });
+
+        function showQuestion() {
+            const questionContainer = document.getElementById("question-container");
+            questionContainer.innerHTML = '';
+
+            const questionElement = document.createElement("div");
+            questionElement.classList.add("question");
+            questionElement.textContent = `${currentQuestionIndex + 1}. ${questions[currentQuestionIndex].question}`;
+            questionContainer.appendChild(questionElement);
+
+            questions[currentQuestionIndex].options.forEach((option, index) => {
+                const optionButton = document.createElement("button");
+                optionButton.classList.add("option");
+                optionButton.textContent = option;
+                optionButton.addEventListener("click", () => selectOption(index));
+                questionContainer.appendChild(optionButton);
+            });
+
+            const errorElement = document.createElement("div");
+            errorElement.id = "error-message";
+            errorElement.classList.add("error-message");
+            questionContainer.appendChild(errorElement);
+
+            updateScore();
+
+            const nextButton = document.getElementById("next-btn");
+            if (currentQuestionIndex === questions.length - 1) {
+                nextButton.textContent = "Submit";
+                nextButton.removeEventListener("click", handleNext);
+                nextButton.addEventListener("click", showResults);
+            } else {
+                nextButton.textContent = "Next";
+                nextButton.removeEventListener("click", showResults);
+                nextButton.addEventListener("click", handleNext);
+            }
+        }
+
+        function selectOption(index) {
+            if (selectedOptionIndex !== -1) return;
+
+            const selectedOption = document.querySelectorAll(".option")[index];
+            if (index === questions[currentQuestionIndex].answer) {
+                selectedOption.classList.add("correct");
+                score++;
+            } else {
+                selectedOption.classList.add("wrong");
+                document.querySelectorAll(".option")[questions[currentQuestionIndex].answer].classList.add("correct");
+            }
+
+            selectedOptionIndex = index;
+
+            document.querySelector("#error-message").textContent = '';
+            updateScore();
+        }
+
+        function handleNext() {
+            if (selectedOptionIndex === -1) {
+                document.querySelector("#error-message").textContent = 'Please select an option!';
+                return;
+            }
+            currentQuestionIndex++;
+            selectedOptionIndex = -1;
+            if (currentQuestionIndex < questions.length) {
+                showQuestion();
+            } else {
+                showResults();
+            }
+        }
+
+        function showResults() {
+            clearInterval(timer);
+
+            let resultMessage;
+            let emoji;
+
+            const percentage = (score / questions.length) * 100;
+
+            if (percentage >= 80) {
+                emoji = "🎉🥳";
+                resultMessage = "Excellent job! You've nailed it!";
+            } else if (percentage >= 50) {
+                emoji = "👍😊";
+                resultMessage = "Well done! You've done good!";
+            } else if (percentage >= 40) {
+                emoji = "😐🙁";
+                resultMessage = "Not bad, but you can do better!";
+            } else {
+                emoji = "💔😢";
+                resultMessage = "Oops! You need more practice.";
+            }
+
+            document.querySelector(".quiz-container").innerHTML = `
+        <div class="result">
+            <h2>Quiz Completed!</h2>
+            <p class="result-message">${resultMessage}</p>
+            <p class="result-emoji">${emoji}</p>
+            <p>Your Score: ${score} / ${questions.length}</p>
+            <button id="restart-btn" class="restart-btn">Restart Quiz</button>
+        </div>
+    `;
+
+            // Add animations to the result box
+            const resultElement = document.querySelector(".result");
+            resultElement.classList.add("result-animation");
+
+            // Re-bind the restart button click event
+            document.getElementById("restart-btn").addEventListener("click", restartQuiz);
+        }
+
+        function updateScore() {
+            document.getElementById("score").textContent = `Score: ${score} / ${questions.length}`;
+        }
+
+        function startTimer() {
+            timer = setInterval(() => {
+                timeRemaining--;
+                const minutes = Math.floor(timeRemaining / 60);
+                const seconds = timeRemaining % 60;
+                document.getElementById("timer").textContent = `Time: ${minutes}:${seconds < 10 ? '0' : ''}${seconds}`;
+                if (timeRemaining <= 0) {
+                    clearInterval(timer);
+                    showResults();
+                }
+            }, 1000);
+        }
+
+        function restartQuiz() {
+            score = 0;
+            currentQuestionIndex = 0;
+            timeRemaining = 600; // Reset timer
+            selectedOptionIndex = -1; // Reset selected option
+
+            document.querySelector(".quiz-container").innerHTML = `
+        <h1>Interactive Quiz</h1>
+        <div class="score-timer">
+            <div id="timer">Time: 10:00</div>
+            <div id="score">Score: 0 / ${questions.length}</div>
+        </div>
+        <div id="question-container"></div>
+        <button id="next-btn" class="next-btn">Next</button>
+        <button id="dark-mode-toggle" class="toggle-mode">☀️</button>
+    `;
+
+            document.getElementById("next-btn").addEventListener("click", handleNext);
+            document.getElementById("dark-mode-toggle").addEventListener("click", toggleDarkMode);
+
+            startTimer();
+            showQuestion();
+        }
+
+        function toggleDarkMode() {
+            const isDarkMode = document.body.classList.toggle("dark-mode");
+            document.getElementById("dark-mode-toggle").textContent = isDarkMode ? "🌙" : "☀️";
+        }
+
+    </script>
+</body>
+
+</html>
